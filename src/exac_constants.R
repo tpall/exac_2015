@@ -1,42 +1,43 @@
 # ExAC constants file
 # Use by source('exac_constants.R')
 
-options(stringsAsFactors=FALSE)
-library(plyr)
+# options(stringsAsFactors=FALSE)
+# library(plyr)
 library(dplyr)
+library(data.table)
 library(magrittr)
 
-calling_interval_length = 59684884
-num_samples = 60706
+calling_interval_length <- 59684884
+num_samples <- 60706
 
 # The colors!
-color_amr = k_amr = '#ED1E24'
-color_eur = k_eur = '#6AA5CD'
-color_afr = k_afr = '#941494'
-color_sas = k_sas = '#FF9912'
-color_eas = k_eas = '#108C44'
-color_oth = k_oth = '#ABB9B9'
-color_mde = k_mde = '#000080'
+color_amr <- k_amr <- '#ED1E24'
+color_eur <- k_eur <- '#6AA5CD'
+color_afr <- k_afr <- '#941494'
+color_sas <- k_sas <- '#FF9912'
+color_eas <- k_eas <- '#108C44'
+color_oth <- k_oth <- '#ABB9B9'
+color_mde <- k_mde <- '#000080'
 
-color_nfe = k_nfe = color_eur
-color_fin = k_fin = '#002F6C'
+color_nfe <- k_nfe <- color_eur
+color_fin <- k_fin <- '#002F6C'
 
-color_syn = k_syn = '#AAAAAA'
-color_mis = k_mis = '#FF6103'
-color_lof = k_lof = '#9D1309'
+color_syn <- k_syn <- '#AAAAAA'
+color_mis <- k_mis <- '#FF6103'
+color_lof <- k_lof <- '#9D1309'
 
-color_cpg = '#2E9FFE'
-color_ti = '#458B00'
-color_tv = '#EA4444'
+color_cpg <- '#2E9FFE'
+color_ti <- '#458B00'
+color_tv <- '#EA4444'
 
-lof_like = c('frameshift_variant','essential_splice','stop_gained')
-mis_like = c('missense_variant','inframe_indel','stop_lost',
+lof_like <- c('frameshift_variant','essential_splice','stop_gained')
+mis_like <- c('missense_variant','inframe_indel','stop_lost',
              'mature_miRNA_variant','start_lost')
-syn_like = c('synonymous_variant','3_prime_UTR_variant','5_prime_UTR_variant',
+syn_like <- c('synonymous_variant','3_prime_UTR_variant','5_prime_UTR_variant',
              'extended_splice','stop_retained_variant','non_coding_transcript_exon_variant',
              'intron_variant','intergenic_variant','regulatory_region_variant')
 
-format_vep_category = function(category_list) {
+format_vep_category <- function(category_list) {
   return(category_list %>%
     gsub("_"," ", .) %>%
     gsub('stop gained', 'nonsense', .) %>%
@@ -48,18 +49,19 @@ format_vep_category = function(category_list) {
     gsub("probably damaging", "prob damaging", .) %>%
     gsub("possibly damaging", "poss damaging", .))
 }
-variant_types = c('transversion', 'non-CpG transition', 'CpG transition')
-variant_type_colors = c(color_tv, color_ti, color_cpg)
+
+variant_types <- c('transversion', 'non-CpG transition', 'CpG transition')
+variant_type_colors <- c(color_tv, color_ti, color_cpg)
 
 # example usage: alpha(k_lof,.5) gives you a 50% transparent LoF maroon
-alpha = function(rgb_hexcolor, proportion) {
-  hex_proportion = sprintf("%02x",round(proportion*255))
-  rgba = paste(rgb_hexcolor,hex_proportion,sep='')
+alpha <- function(rgb_hexcolor, proportion) {
+  hex_proportion <- sprintf("%02x",round(proportion*255))
+  rgba <- paste(rgb_hexcolor,hex_proportion,sep='')
   return (rgba)
 }
 
 pops <- c('afr', 'amr', 'eas', 'fin', 'nfe', 'sas')
-pop_colors = c('afr' = color_afr,
+pop_colors <- c('afr' = color_afr,
                'amr' = color_amr,
                'eas' = color_eas,
                'fin' = color_fin,
@@ -72,7 +74,7 @@ pop_colors = c('afr' = color_afr,
                'consanguineous' = 'pink',
                'sas_non_consang' = 'orange',
                'exac' = 'black')
-pop_names = c('afr' = 'African',
+pop_names <- c('afr' = 'African',
              'amr' = 'Latino',
              'eas' = 'East Asian',
              'fin' = 'Finnish',
@@ -90,7 +92,7 @@ pop_names = c('afr' = 'African',
 # Populations and percent ancestries
 # World in millions, all others actual
 # From Laramie
-populationAncestries <- data.frame(
+populationAncestries <- data_frame(
   row.names=c("East Asian", "South Asian", "European", "Middle Eastern", "African", "Latino", "Oceanic", "DiverseOther", "AfricanEuropeanAdmixed"),
   world=c(1932, 2085, 1145, 410,  1022, 529, 38, NA, NA),
   kgenomes=c(523, 494, 514, 0, 691, 355, 0, NA, NA),
@@ -101,20 +103,21 @@ populationAncestries <- data.frame(
 )
 
 # Loading data
-data_url = 'ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/manuscript_data/'
-open_file_exac = function(fname) {
-  con = gzcon(url(paste0(data_url, fname)))
-  dat = readLines(con)
+data_url <- 'ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/manuscript_data/'
+
+open_file_exac <- function(fname) {
+  con <- gzcon(url(paste0(data_url, fname)))
+  dat <- readLines(con)
   return(read.delim(textConnection(dat), header=T))
 }
 
-load_exac_data = function(type='', private=FALSE, canonical=FALSE, reload=FALSE) { # This takes ~10 minutes (download, then ~5 mins of processing)
+load_exac_data <- function(type='', private=FALSE, canonical=FALSE, reload=FALSE) { # This takes ~10 minutes (download, then ~5 mins of processing)
   time_start <- proc.time()
-  transcripts = ifelse(type != '', paste0('.', type), '')
-  canon = ifelse(canonical, '.canonical', '')
-  data_format = ifelse(private, '.full', '')
-  fname_unzipped = paste0('ExAC.r0.3.1.sites.vep', data_format, transcripts, canon, '.table')
-  fname = paste0(fname_unzipped, '.gz')
+  transcripts <- ifelse(type != '', paste0('.', type), '')
+  canon <- ifelse(canonical, '.canonical', '')
+  data_format <- ifelse(private, '.full', '')
+  fname_unzipped <- paste0('ExAC.r0.3.1.sites.vep', data_format, transcripts, canon, '.table')
+  fname <- paste0(fname_unzipped, '.gz')
 #   if (reload | (!require('data.table') & !file.exists(fname)) | (require('data.table') & !file.exists(fname_unzipped))) {
   if (reload | !file.exists(fname)) {
     print(paste('Step (0/6): Downloading', fname, '...'))
@@ -133,49 +136,49 @@ load_exac_data = function(type='', private=FALSE, canonical=FALSE, reload=FALSE)
 #     exac = suppressWarnings(fread(fname_unzipped, data.table=F))
 #   } else {
 #     print('data.table not found. Using normal read.delim... install.packages("data.table")!')
-    exac = read.delim(fname, header=T)
+    exac <- read.delim(fname, header=T)
 #   }
   print('Now processing data (2/6): Determining sequence contexts...')
-  colnames(exac) = tolower(colnames(exac))
-  exac$pos_id = paste(exac$chrom, formatC(exac$pos,width=9,flag='0'), exac$ref, exac$alt, sep='_')
-  exac$indel = nchar(exac$ref) != nchar(exac$alt)
-  exac$bases_inserted = nchar(exac$alt) - nchar(exac$ref)
-  exac$transition = (exac$ref == 'A' & exac$alt == 'G') | (exac$ref == 'G' & exac$alt == 'A') | (exac$ref == 'C' & exac$alt == 'T') | (exac$ref == 'T' & exac$alt == 'C')
-  exac$transition[exac$indel] = NA
-  exac$cpg = (exac$ref == 'C' & exac$alt == 'T' & substr(exac$context, 2, 3) == 'CG') | (exac$ref == 'G' & exac$alt == 'A' & substr(exac$context, 1, 2) == 'CG')
-  exac$cpg[exac$indel] = NA
-  exac$alt_is_ancestral = exac$alt == exac$ancestral
-  exac$alt_is_ancestral[exac$ref != exac$ancestral & exac$alt != exac$ancestral] = NA
+  colnames(exac) <- tolower(colnames(exac))
+  exac$pos_id <- paste(exac$chrom, formatC(exac$pos,width=9,flag='0'), exac$ref, exac$alt, sep='_')
+  exac$indel <- nchar(exac$ref) != nchar(exac$alt)
+  exac$bases_inserted <- nchar(exac$alt) - nchar(exac$ref)
+  exac$transition <- (exac$ref == 'A' & exac$alt == 'G') | (exac$ref == 'G' & exac$alt == 'A') | (exac$ref == 'C' & exac$alt == 'T') | (exac$ref == 'T' & exac$alt == 'C')
+  exac$transition[exac$indel]<-NA
+  exac$cpg<-(exac$ref == 'C' & exac$alt == 'T' & substr(exac$context, 2, 3) == 'CG') | (exac$ref == 'G' & exac$alt == 'A' & substr(exac$context, 1, 2) == 'CG')
+  exac$cpg[exac$indel]<-NA
+  exac$alt_is_ancestral<-exac$alt == exac$ancestral
+  exac$alt_is_ancestral[exac$ref != exac$ancestral & exac$alt != exac$ancestral]<-NA
   
   print('(3/6): Computing allele frequencies...')
-  exac$af_popmax = exac$ac_popmax / exac$an_popmax
-  exac$af_popmax[exac$an_popmax == 0 | is.na(exac$an_popmax) | is.na(exac$ac_popmax)] = 0.0
-  exac$af_global = exac$ac_adj / exac$an_adj
-  exac$af_global[exac$an_adj == 0 | is.na(exac$an_adj) | is.na(exac$ac_adj)] = 0.0
-  exac$singleton = exac$ac_adj == 1
-  exac$maf_global = pmin(exac$af_global, 1-exac$af_global) # minor allele frequency
-  exac$daf_global = ifelse(exac$alt_is_ancestral, 1-exac$af_global, exac$af_global)
-  exac$daf_popmax = ifelse(exac$alt_is_ancestral, 1-exac$af_popmax, exac$af_popmax)
+  exac$af_popmax<-exac$ac_popmax / exac$an_popmax
+  exac$af_popmax[exac$an_popmax == 0 | is.na(exac$an_popmax) | is.na(exac$ac_popmax)]<-0.0
+  exac$af_global<-exac$ac_adj / exac$an_adj
+  exac$af_global[exac$an_adj == 0 | is.na(exac$an_adj) | is.na(exac$ac_adj)]<-0.0
+  exac$singleton<-exac$ac_adj == 1
+  exac$maf_global <- pmin(exac$af_global, 1-exac$af_global) # minor allele frequency
+  exac$daf_global <- ifelse(exac$alt_is_ancestral, 1-exac$af_global, exac$af_global)
+  exac$daf_popmax <- ifelse(exac$alt_is_ancestral, 1-exac$af_popmax, exac$af_popmax)
   
   print('(4/6): Calculating bad regions of the genome...')
-  resolution = 1000
-  number_of_regions = 10
-  intervals=(0:(250000000/resolution))*resolution
-  exac$pos_bin = cut(exac$pos, intervals)
-  exac$bin_start = as.numeric( sub("\\((.+),.*", "\\1", exac$pos_bin))
-  allelic_state = plyr::count(subset(exac, select=c(chrom, pos)))
-  multiallelics = subset(allelic_state, freq > 3, select=c(chrom, pos))
-  multiallelics$pos_bin = cut(multiallelics$pos, intervals)
-  multiallelics$bin_start = as.numeric( sub("\\((.+),.*", "\\1", multiallelics$pos_bin))
-  multiallelic_counts = plyr::count(multiallelics, vars = c('chrom', 'bin_start'))
-  bad_sectors = subset(head(multiallelic_counts[order(multiallelic_counts$freq, decreasing = T),], number_of_regions), select=c(chrom, bin_start))
-  bad_sectors$sector = paste(bad_sectors$chrom, bad_sectors$bin_start, sep='_')
+  resolution <- 1000
+  number_of_regions <- 10
+  intervals <- (0:(250000000/resolution))*resolution
+  exac$pos_bin <- cut(exac$pos, intervals)
+  exac$bin_start <- as.numeric( sub("\\((.+),.*", "\\1", exac$pos_bin))
+  allelic_state <- plyr::count(subset(exac, select=c(chrom, pos)))
+  multiallelics <- subset(allelic_state, freq > 3, select=c(chrom, pos))
+  multiallelics$pos_bin <- cut(multiallelics$pos, intervals)
+  multiallelics$bin_start <- as.numeric( sub("\\((.+),.*", "\\1", multiallelics$pos_bin))
+  multiallelic_counts <- plyr::count(multiallelics, vars = c('chrom', 'bin_start'))
+  bad_sectors <- subset(head(multiallelic_counts[order(multiallelic_counts$freq, decreasing = T),], number_of_regions), select=c(chrom, bin_start))
+  bad_sectors$sector <- paste(bad_sectors$chrom, bad_sectors$bin_start, sep='_')
   
   print('(5/6): Determining what to _use_...')
-  exac$sector = paste(exac$chrom, exac$bin_start, sep='_')
-  exac$bad = exac$sector %in% bad_sectors$sector
-  exac$use = exac$an_adj > .80*max(exac$an_adj, na.rm=TRUE) & exac$ac_adj > 0 & exac$filter=='PASS' & !exac$bad
-  exac$lof_use = !is.na(exac$lof) & exac$lof == 'HC' & is.na(exac$lof_flags)
+  exac$sector <- paste(exac$chrom, exac$bin_start, sep='_')
+  exac$bad <- exac$sector %in% bad_sectors$sector
+  exac$use <- exac$an_adj > .80*max(exac$an_adj, na.rm=TRUE) & exac$ac_adj > 0 & exac$filter=='PASS' & !exac$bad
+  exac$lof_use <- !is.na(exac$lof) & exac$lof == 'HC' & is.na(exac$lof_flags)
   
   print('(6/6): Parsing SIFT and PolyPhen scores, and separating functional categories...')
   # for the idea behind these named group regexes, see http://stackoverflow.com/a/2969666/3806692
